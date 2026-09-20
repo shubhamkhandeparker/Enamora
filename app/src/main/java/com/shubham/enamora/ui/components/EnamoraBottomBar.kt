@@ -24,6 +24,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.shubham.enamora.navigation.EnamoraDestination
+import com.shubham.enamora.navigation.EnamoraRoutes
 import com.shubham.enamora.ui.theme.EnamoraObsidian
 import com.shubham.enamora.ui.theme.EnamoraOutline
 import com.shubham.enamora.ui.theme.EnamoraRose
@@ -34,15 +35,27 @@ fun EnamoraBottomBar(
     navController: NavHostController,
     modifier: Modifier = Modifier
 ) {
-    val currentBackStackEntry by navController.currentBackStackEntryAsState()
-    val currentRoute = currentBackStackEntry?.destination?.route
+    val currentBackStackEntry by
+    navController.currentBackStackEntryAsState()
+
+    val currentRoute =
+        currentBackStackEntry?.destination?.route
+
+    val isConversationRoute =
+        currentRoute == EnamoraRoutes.CONVERSATION ||
+                currentRoute?.startsWith("conversation/") == true
 
     NavigationBar(
         modifier = modifier.drawBehind {
             drawLine(
-                color = EnamoraOutline.copy(alpha = 0.65f),
+                color = EnamoraOutline.copy(
+                    alpha = 0.65f
+                ),
                 start = Offset.Zero,
-                end = Offset(size.width, 0f),
+                end = Offset(
+                    size.width,
+                    0f
+                ),
                 strokeWidth = 1.dp.toPx()
             )
         },
@@ -50,15 +63,33 @@ fun EnamoraBottomBar(
         tonalElevation = 0.dp
     ) {
         EnamoraDestination.bottomNavigationItems.forEach { destination ->
-            val isSelected = currentRoute == destination.route
+            val isSelected =
+                when (destination) {
+                    EnamoraDestination.CHAT -> {
+                        currentRoute ==
+                                EnamoraDestination.CHAT.route ||
+                                isConversationRoute
+                    }
+
+                    else -> {
+                        currentRoute == destination.route
+                    }
+                }
 
             NavigationBarItem(
                 selected = isSelected,
                 onClick = {
-                    navController.navigate(destination.route) {
-                        popUpTo(navController.graph.findStartDestination().id) {
+                    navController.navigate(
+                        destination.route
+                    ) {
+                        popUpTo(
+                            navController.graph
+                                .findStartDestination()
+                                .id
+                        ) {
                             saveState = true
                         }
+
                         launchSingleTop = true
                         restoreState = true
                     }
@@ -72,17 +103,24 @@ fun EnamoraBottomBar(
                 label = {
                     Text(
                         text = destination.label,
-                        style = MaterialTheme.typography.labelSmall
+                        style =
+                            MaterialTheme.typography.labelSmall
                     )
                 },
                 alwaysShowLabel = true,
-                colors = NavigationBarItemDefaults.colors(
-                    selectedIconColor = EnamoraRose,
-                    selectedTextColor = EnamoraRose,
-                    unselectedIconColor = EnamoraTextSecondary,
-                    unselectedTextColor = EnamoraTextSecondary,
-                    indicatorColor = Color.Transparent
-                )
+                colors =
+                    NavigationBarItemDefaults.colors(
+                        selectedIconColor =
+                            EnamoraRose,
+                        selectedTextColor =
+                            EnamoraRose,
+                        unselectedIconColor =
+                            EnamoraTextSecondary,
+                        unselectedTextColor =
+                            EnamoraTextSecondary,
+                        indicatorColor =
+                            Color.Transparent
+                    )
             )
         }
     }
@@ -93,7 +131,12 @@ private fun EnamoraDestinationIcon(
     destination: EnamoraDestination,
     selected: Boolean
 ) {
-    val iconColor = if (selected) EnamoraRose else EnamoraTextSecondary
+    val iconColor =
+        if (selected) {
+            EnamoraRose
+        } else {
+            EnamoraTextSecondary
+        }
 
     Canvas(
         modifier = Modifier.size(22.dp)
@@ -102,7 +145,12 @@ private fun EnamoraDestinationIcon(
         val iconHeight = size.height
 
         val outline = Stroke(
-            width = if (selected) 2.dp.toPx() else 1.6.dp.toPx(),
+            width =
+                if (selected) {
+                    2.dp.toPx()
+                } else {
+                    1.6.dp.toPx()
+                },
             cap = StrokeCap.Round,
             join = StrokeJoin.Round
         )
@@ -110,16 +158,37 @@ private fun EnamoraDestinationIcon(
         when (destination) {
             EnamoraDestination.HOME -> {
                 val roof = Path().apply {
-                    moveTo(iconWidth * 0.14f, iconHeight * 0.48f)
-                    lineTo(iconWidth * 0.50f, iconHeight * 0.17f)
-                    lineTo(iconWidth * 0.86f, iconHeight * 0.48f)
+                    moveTo(
+                        iconWidth * 0.14f,
+                        iconHeight * 0.48f
+                    )
+                    lineTo(
+                        iconWidth * 0.50f,
+                        iconHeight * 0.17f
+                    )
+                    lineTo(
+                        iconWidth * 0.86f,
+                        iconHeight * 0.48f
+                    )
                 }
 
                 val house = Path().apply {
-                    moveTo(iconWidth * 0.23f, iconHeight * 0.43f)
-                    lineTo(iconWidth * 0.23f, iconHeight * 0.84f)
-                    lineTo(iconWidth * 0.77f, iconHeight * 0.84f)
-                    lineTo(iconWidth * 0.77f, iconHeight * 0.43f)
+                    moveTo(
+                        iconWidth * 0.23f,
+                        iconHeight * 0.43f
+                    )
+                    lineTo(
+                        iconWidth * 0.23f,
+                        iconHeight * 0.84f
+                    )
+                    lineTo(
+                        iconWidth * 0.77f,
+                        iconHeight * 0.84f
+                    )
+                    lineTo(
+                        iconWidth * 0.77f,
+                        iconHeight * 0.43f
+                    )
                 }
 
                 drawPath(
@@ -194,9 +263,18 @@ private fun EnamoraDestinationIcon(
                 )
 
                 val tail = Path().apply {
-                    moveTo(iconWidth * 0.33f, iconHeight * 0.75f)
-                    lineTo(iconWidth * 0.22f, iconHeight * 0.88f)
-                    lineTo(iconWidth * 0.49f, iconHeight * 0.76f)
+                    moveTo(
+                        iconWidth * 0.33f,
+                        iconHeight * 0.75f
+                    )
+                    lineTo(
+                        iconWidth * 0.22f,
+                        iconHeight * 0.88f
+                    )
+                    lineTo(
+                        iconWidth * 0.49f,
+                        iconHeight * 0.76f
+                    )
                 }
 
                 drawPath(

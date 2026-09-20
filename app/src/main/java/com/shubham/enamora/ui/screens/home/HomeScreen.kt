@@ -26,6 +26,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +59,8 @@ import com.shubham.enamora.ui.theme.EnamoraSurface
 import com.shubham.enamora.ui.theme.EnamoraTextSecondary
 import com.shubham.enamora.ui.theme.EnamoraWarmIvory
 import com.shubham.enamora.ui.theme.EnamoraWineDeep
+import kotlinx.coroutines.delay
+import java.util.Calendar
 
 @Composable
 fun HomeScreen(
@@ -123,6 +130,8 @@ private fun HomeHeader(
     userName: String,
     onNotificationsClick: () -> Unit
 ) {
+    val greeting = rememberTimeBasedGreeting()
+
     Column(
         verticalArrangement = Arrangement.spacedBy(5.dp)
     ) {
@@ -146,7 +155,7 @@ private fun HomeHeader(
         }
 
         Text(
-            text = "Good evening, $userName",
+            text = "$greeting, $userName",
             color = EnamoraRoseSoft,
             style = MaterialTheme.typography.titleLarge
         )
@@ -167,6 +176,30 @@ private fun HomeHeader(
                 style = MaterialTheme.typography.bodyMedium
             )
         }
+    }
+}
+
+@Composable
+private fun rememberTimeBasedGreeting(): String {
+    var currentHour by remember {
+        mutableIntStateOf(
+            Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
+        )
+    }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000L)
+            currentHour = Calendar.getInstance()
+                .get(Calendar.HOUR_OF_DAY)
+        }
+    }
+
+    return when (currentHour) {
+        in 5..11 -> "Good morning"
+        in 12..16 -> "Good afternoon"
+        in 17..21 -> "Good evening"
+        else -> "Welcome back"
     }
 }
 

@@ -22,6 +22,27 @@ enum class EnamoraDestination(
     );
 
     companion object {
-        val bottomNavigationItems: List<EnamoraDestination> = entries
+        val bottomNavigationItems =
+            listOf(
+                HOME,
+                EXPLORE,
+                CHAT,
+                ABOUT
+            )
+    }
+}
+
+object EnamoraRoutes {
+
+    const val CHARACTER_ID_ARGUMENT =
+        "characterId"
+
+    const val CONVERSATION =
+        "conversation/{characterId}"
+
+    fun conversation(
+        characterId: String
+    ): String {
+        return "conversation/$characterId"
     }
 }

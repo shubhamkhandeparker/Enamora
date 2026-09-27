@@ -20,7 +20,6 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.shubham.enamora.navigation.EnamoraDestination
@@ -43,7 +42,9 @@ fun EnamoraBottomBar(
 
     val isConversationRoute =
         currentRoute == EnamoraRoutes.CONVERSATION ||
-                currentRoute?.startsWith("conversation/") == true
+                currentRoute?.startsWith(
+                    "conversation/"
+                ) == true
 
     NavigationBar(
         modifier = modifier.drawBehind {
@@ -62,67 +63,74 @@ fun EnamoraBottomBar(
         containerColor = EnamoraObsidian,
         tonalElevation = 0.dp
     ) {
-        EnamoraDestination.bottomNavigationItems.forEach { destination ->
-            val isSelected =
-                when (destination) {
-                    EnamoraDestination.CHAT -> {
-                        currentRoute ==
-                                EnamoraDestination.CHAT.route ||
-                                isConversationRoute
-                    }
-
-                    else -> {
-                        currentRoute == destination.route
-                    }
-                }
-
-            NavigationBarItem(
-                selected = isSelected,
-                onClick = {
-                    navController.navigate(
-                        destination.route
-                    ) {
-                        popUpTo(
-                            navController.graph
-                                .findStartDestination()
-                                .id
-                        ) {
-                            saveState = true
+        EnamoraDestination
+            .bottomNavigationItems
+            .forEach { destination ->
+                val isSelected =
+                    when (destination) {
+                        EnamoraDestination.CHAT -> {
+                            currentRoute ==
+                                    EnamoraDestination
+                                        .CHAT
+                                        .route ||
+                                    isConversationRoute
                         }
 
-                        launchSingleTop = true
-                        restoreState = true
+                        else -> {
+                            currentRoute ==
+                                    destination.route
+                        }
                     }
-                },
-                icon = {
-                    EnamoraDestinationIcon(
-                        destination = destination,
-                        selected = isSelected
-                    )
-                },
-                label = {
-                    Text(
-                        text = destination.label,
-                        style =
-                            MaterialTheme.typography.labelSmall
-                    )
-                },
-                alwaysShowLabel = true,
-                colors =
-                    NavigationBarItemDefaults.colors(
-                        selectedIconColor =
-                            EnamoraRose,
-                        selectedTextColor =
-                            EnamoraRose,
-                        unselectedIconColor =
-                            EnamoraTextSecondary,
-                        unselectedTextColor =
-                            EnamoraTextSecondary,
-                        indicatorColor =
-                            Color.Transparent
-                    )
-            )
-        }
+
+                NavigationBarItem(
+                    selected = isSelected,
+                    onClick = {
+                        navController.navigate(
+                            destination.route
+                        ) {
+                            popUpTo(
+                                EnamoraDestination
+                                    .HOME
+                                    .route
+                            ) {
+                                inclusive = false
+                            }
+
+                            launchSingleTop = true
+                        }
+                    },
+                    icon = {
+                        EnamoraDestinationIcon(
+                            destination = destination,
+                            selected = isSelected
+                        )
+                    },
+                    label = {
+                        Text(
+                            text = destination.label,
+                            style =
+                                MaterialTheme
+                                    .typography
+                                    .labelSmall
+                        )
+                    },
+                    alwaysShowLabel = true,
+                    colors =
+                        NavigationBarItemDefaults
+                            .colors(
+                                selectedIconColor =
+                                    EnamoraRose,
+                                selectedTextColor =
+                                    EnamoraRose,
+                                unselectedIconColor =
+                                    EnamoraTextSecondary,
+                                unselectedTextColor =
+                                    EnamoraTextSecondary,
+                                indicatorColor =
+                                    Color.Transparent
+                            )
+                )
+            }
     }
 }
 

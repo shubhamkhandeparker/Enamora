@@ -11,7 +11,8 @@ enum class MessageDeliveryState {
     SENDING,
     SENT,
     DELIVERED,
-    READ
+    READ,
+    FAILED
 }
 
 sealed interface ChatMessageContent {
@@ -47,7 +48,8 @@ data class ChatMessageUiModel(
     val author: MessageAuthor,
     val content: ChatMessageContent,
     val timestamp: String,
-    val deliveryState: MessageDeliveryState? = null
+    val deliveryState:
+    MessageDeliveryState? = null
 ) {
     init {
         require(id.isNotBlank()) {

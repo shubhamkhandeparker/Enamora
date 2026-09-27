@@ -81,6 +81,24 @@ interface MessageDao {
     @Query(
         """
         UPDATE messages
+        SET delivery_status = 'PENDING',
+            sync_status = 'LOCAL_ONLY',
+            server_id = NULL,
+            sent_at = NULL,
+            delivered_at = NULL,
+            read_at = NULL
+        WHERE id = :messageId
+          AND sender_type = 'USER'
+          AND deleted_at IS NULL
+        """
+    )
+    suspend fun markMessagePending(
+        messageId: String
+    )
+
+    @Query(
+        """
+        UPDATE messages
         SET delivery_status = 'SENT',
             sync_status = 'SYNCED',
             server_id = :serverId,

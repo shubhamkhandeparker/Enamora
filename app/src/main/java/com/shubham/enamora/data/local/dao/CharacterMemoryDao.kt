@@ -66,6 +66,40 @@ interface CharacterMemoryDao {
         FROM character_memories
         WHERE user_id = :userId
           AND character_id = :characterId
+          AND is_active = 1
+          AND confidence >= :minimumConfidence
+          AND (
+              :includeSensitive = 1
+              OR is_sensitive = 0
+          )
+          AND (
+              expires_at IS NULL
+              OR expires_at > :currentTime
+          )
+        ORDER BY importance DESC,
+                 COALESCE(
+                     last_used_at,
+                     last_confirmed_at,
+                     first_learned_at
+                 ) DESC
+        LIMIT :limit
+        """
+    )
+    suspend fun getMemoriesForContext(
+        userId: String,
+        characterId: String,
+        currentTime: Long,
+        minimumConfidence: Float,
+        includeSensitive: Boolean,
+        limit: Int
+    ): List<CharacterMemoryEntity>
+
+    @Query(
+        """
+        SELECT *
+        FROM character_memories
+        WHERE user_id = :userId
+          AND character_id = :characterId
           AND memory_key = :memoryKey
         LIMIT 1
         """

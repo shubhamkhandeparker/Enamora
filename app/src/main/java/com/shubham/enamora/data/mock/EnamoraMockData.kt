@@ -1,6 +1,7 @@
 package com.shubham.enamora.data.mock
 
 import com.shubham.enamora.R
+import com.shubham.enamora.data.local.seed.InitialCharacterData
 import com.shubham.enamora.ui.model.CharacterPromptUiModel
 import com.shubham.enamora.ui.model.CharacterUiModel
 import com.shubham.enamora.ui.model.ChatMessageUiModel
@@ -14,7 +15,7 @@ object EnamoraMockData {
 
     val characters = listOf(
         CharacterUiModel(
-            id = "character_demo_01",
+            id = InitialCharacterData.RHEA_ID,
             name = "Rhea",
             age = 27,
             portraitResId = R.drawable.character_demo_01,

@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -16,19 +14,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.shubham.enamora.data.mock.EnamoraMockData
 import com.shubham.enamora.ui.components.EnamoraBottomBar
-import com.shubham.enamora.ui.model.ChatMessageContent
-import com.shubham.enamora.ui.model.ChatMessageUiModel
-import com.shubham.enamora.ui.model.MessageAuthor
-import com.shubham.enamora.ui.model.MessageDeliveryState
 import com.shubham.enamora.ui.screens.about.AboutScreen
-import com.shubham.enamora.ui.screens.chat.ChatListScreen
-import com.shubham.enamora.ui.screens.chat.ChatScreen
+import com.shubham.enamora.ui.screens.chat.ChatListRoute
+import com.shubham.enamora.ui.screens.chat.ChatRoute
 import com.shubham.enamora.ui.screens.explore.ExploreScreen
 import com.shubham.enamora.ui.screens.home.HomeScreen
 import com.shubham.enamora.ui.theme.EnamoraObsidian
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun EnamoraApp(
@@ -42,48 +33,10 @@ fun EnamoraApp(
         )
     }
 
-    val localMessagesByCharacter = remember {
-        mutableStateMapOf<
-                String,
-                List<ChatMessageUiModel>
-                >()
-    }
-
     val selectedCharacter =
         EnamoraMockData.characters.firstOrNull { character ->
             character.id == selectedCharacterId
         } ?: EnamoraMockData.activeCharacter
-
-    val currentChatThreads =
-        EnamoraMockData.chatThreads.map { thread ->
-            val messages =
-                localMessagesByCharacter[
-                    thread.character.id
-                ] ?: EnamoraMockData.messagesForCharacter(
-                    thread.character.id
-                )
-
-            val latestMessage =
-                messages.lastOrNull()
-
-            if (latestMessage == null) {
-                thread.copy(
-                    latestMessage = null,
-                    latestMessageTimestamp = null,
-                    unreadCount = 0
-                )
-            } else {
-                thread.copy(
-                    latestMessage =
-                        chatListPreviewText(
-                            message = latestMessage
-                        ),
-                    latestMessageTimestamp =
-                        latestMessage.timestamp,
-                    unreadCount = 0
-                )
-            }
-        }
 
     fun openConversation(
         characterId: String
@@ -113,37 +66,6 @@ fun EnamoraApp(
                 launchSingleTop = true
             }
         }
-    }
-
-    fun sendUserMessage(
-        characterId: String,
-        messageText: String
-    ) {
-        val existingMessages =
-            localMessagesByCharacter[
-                characterId
-            ] ?: EnamoraMockData.messagesForCharacter(
-                characterId
-            )
-
-        val newMessage =
-            ChatMessageUiModel(
-                id =
-                    "user_${characterId}_" +
-                            System.currentTimeMillis(),
-                author = MessageAuthor.USER,
-                content = ChatMessageContent.Text(
-                    text = messageText
-                ),
-                timestamp =
-                    currentMessageTimestamp(),
-                deliveryState =
-                    MessageDeliveryState.SENT
-            )
-
-        localMessagesByCharacter[
-            characterId
-        ] = existingMessages + newMessage
     }
 
     Scaffold(
@@ -199,7 +121,7 @@ fun EnamoraApp(
                             launchSingleTop = true
                         }
                     },
-                    onPass = { _ ->
+                    onPass = {
                     },
                     onConnect = { character ->
                         openConversation(
@@ -212,9 +134,7 @@ fun EnamoraApp(
             composable(
                 route = EnamoraDestination.CHAT.route
             ) {
-                ChatListScreen(
-                    chatThreads =
-                        currentChatThreads,
+                ChatListRoute(
                     onChatClick = { thread ->
                         openConversation(
                             thread.character.id
@@ -238,18 +158,9 @@ fun EnamoraApp(
                             character.id == characterId
                         } ?: selectedCharacter
 
-                val conversationMessages =
-                    localMessagesByCharacter[
-                        conversationCharacter.id
-                    ] ?: EnamoraMockData.messagesForCharacter(
-                        conversationCharacter.id
-                    )
-
-                ChatScreen(
+                ChatRoute(
                     character =
                         conversationCharacter,
-                    messages =
-                        conversationMessages,
                     isTyping =
                         EnamoraMockData.isCharacterTyping(
                             conversationCharacter.id
@@ -276,14 +187,6 @@ fun EnamoraApp(
                     onCameraClick = {
                     },
                     onMicrophoneClick = {
-                    },
-                    onSendMessage = { messageText ->
-                        sendUserMessage(
-                            characterId =
-                                conversationCharacter.id,
-                            messageText =
-                                messageText
-                        )
                     }
                 )
             }
@@ -309,33 +212,4 @@ fun EnamoraApp(
             }
         }
     }
-}
-
-private fun chatListPreviewText(
-    message: ChatMessageUiModel
-): String {
-    return when (val content = message.content) {
-        is ChatMessageContent.Text -> {
-            content.text
-        }
-
-        is ChatMessageContent.VoiceNote -> {
-            "Voice note"
-        }
-
-        is ChatMessageContent.Photo -> {
-            if (content.caption.isBlank()) {
-                "Photo"
-            } else {
-                content.caption
-            }
-        }
-    }
-}
-
-private fun currentMessageTimestamp(): String {
-    return SimpleDateFormat(
-        "h:mm a",
-        Locale.getDefault()
-    ).format(Date())
 }

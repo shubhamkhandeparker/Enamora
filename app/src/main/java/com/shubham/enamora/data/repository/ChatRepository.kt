@@ -7,14 +7,28 @@ import com.shubham.enamora.data.local.entity.ChatThreadEntity
 import com.shubham.enamora.data.local.entity.MessageEntity
 import com.shubham.enamora.data.local.entity.RelationshipStateEntity
 import com.shubham.enamora.data.local.seed.InitialCharacterData
-import kotlinx.coroutines.flow.Flow
 import java.util.UUID
+import kotlinx.coroutines.flow.Flow
 
 class ChatRepository(
     private val database: EnamoraDatabase
 ) {
     companion object {
-        const val LOCAL_USER_ID = "local_user"
+        const val LOCAL_USER_ID =
+            "local_user"
+
+        const val PRESENCE_STATUS_OFFLINE =
+            "OFFLINE"
+
+        const val PRESENCE_STATUS_ONLINE =
+            "ONLINE"
+
+        const val PRESENCE_STATUS_TYPING =
+            "TYPING"
+
+        private const val
+                STALE_ACTIVE_PRESENCE_DURATION_MS =
+            2L * 60L * 1000L
     }
 
     private val characterDao =
@@ -35,13 +49,29 @@ class ChatRepository(
     fun observeThreads(
         userId: String = LOCAL_USER_ID
     ): Flow<List<ChatThreadEntity>> {
-        return chatThreadDao.observeThreads(userId)
+        return chatThreadDao.observeThreads(
+            userId
+        )
     }
 
     fun observeMessages(
         threadId: String
     ): Flow<List<MessageEntity>> {
-        return messageDao.observeMessages(threadId)
+        return messageDao.observeMessages(
+            threadId
+        )
+    }
+
+    fun observeCharacterPresence(
+        userId: String = LOCAL_USER_ID,
+        characterId: String =
+            InitialCharacterData.RHEA_ID
+    ): Flow<CharacterPresenceEntity?> {
+        return characterPresenceDao
+            .observePresence(
+                userId = userId,
+                characterId = characterId
+            )
     }
 
     suspend fun prepareRheaConversation(
@@ -59,18 +89,21 @@ class ChatRepository(
             characterDao.upsertCharacter(
                 InitialCharacterData.createRhea(
                     createdAt =
-                        existingCharacter?.createdAt
+                        existingCharacter
+                            ?.createdAt
                             ?: currentTime,
                     updatedAt = currentTime
                 )
             )
 
             val existingThread =
-                chatThreadDao.getThreadForCharacter(
-                    userId = userId,
-                    characterId =
-                        InitialCharacterData.RHEA_ID
-                )
+                chatThreadDao
+                    .getThreadForCharacter(
+                        userId = userId,
+                        characterId =
+                            InitialCharacterData
+                                .RHEA_ID
+                    )
 
             val thread =
                 existingThread
@@ -80,13 +113,15 @@ class ChatRepository(
                             .toString(),
                         userId = userId,
                         characterId =
-                            InitialCharacterData.RHEA_ID,
+                            InitialCharacterData
+                                .RHEA_ID,
                         createdAt = currentTime,
                         updatedAt = currentTime
                     ).also { newThread ->
-                        chatThreadDao.upsertThread(
-                            newThread
-                        )
+                        chatThreadDao
+                            .upsertThread(
+                                newThread
+                            )
                     }
 
             val existingRelationship =
@@ -94,10 +129,13 @@ class ChatRepository(
                     .getRelationship(
                         userId = userId,
                         characterId =
-                            InitialCharacterData.RHEA_ID
+                            InitialCharacterData
+                                .RHEA_ID
                     )
 
-            if (existingRelationship == null) {
+            if (
+                existingRelationship == null
+            ) {
                 relationshipStateDao
                     .upsertRelationship(
                         RelationshipStateEntity(
@@ -106,7 +144,8 @@ class ChatRepository(
                                 .toString(),
                             userId = userId,
                             characterId =
-                                InitialCharacterData.RHEA_ID,
+                                InitialCharacterData
+                                    .RHEA_ID,
                             firstConnectedAt =
                                 currentTime,
                             stageChangedAt =
@@ -118,31 +157,139 @@ class ChatRepository(
             }
 
             val existingPresence =
-                characterPresenceDao.getPresence(
-                    userId = userId,
-                    characterId =
-                        InitialCharacterData.RHEA_ID
-                )
-
-            if (existingPresence == null) {
-                characterPresenceDao.upsertPresence(
-                    CharacterPresenceEntity(
-                        id = UUID
-                            .randomUUID()
-                            .toString(),
+                characterPresenceDao
+                    .getPresence(
                         userId = userId,
                         characterId =
-                            InitialCharacterData.RHEA_ID,
-                        timezoneId =
-                            "Asia/Kolkata",
-                        statusUpdatedAt =
-                            currentTime
+                            InitialCharacterData
+                                .RHEA_ID
                     )
-                )
+
+            if (existingPresence == null) {
+                characterPresenceDao
+                    .upsertPresence(
+                        CharacterPresenceEntity(
+                            id = UUID
+                                .randomUUID()
+                                .toString(),
+                            userId = userId,
+                            characterId =
+                                InitialCharacterData
+                                    .RHEA_ID,
+                            availabilityStatus =
+                                PRESENCE_STATUS_OFFLINE,
+                            timezoneId =
+                                "Asia/Kolkata",
+                            statusUpdatedAt =
+                                currentTime
+                        )
+                    )
+            } else {
+                val hasActiveStatus =
+                    existingPresence
+                        .availabilityStatus
+                        .equals(
+                            other =
+                                PRESENCE_STATUS_ONLINE,
+                            ignoreCase = true
+                        ) ||
+                            existingPresence
+                                .availabilityStatus
+                                .equals(
+                                    other =
+                                        PRESENCE_STATUS_TYPING,
+                                    ignoreCase = true
+                                )
+
+                val activeStatusAge =
+                    currentTime -
+                            existingPresence
+                                .statusUpdatedAt
+
+                val isStaleActiveStatus =
+                    hasActiveStatus &&
+                            activeStatusAge >=
+                            STALE_ACTIVE_PRESENCE_DURATION_MS
+
+                if (isStaleActiveStatus) {
+                    characterPresenceDao
+                        .markOffline(
+                            userId = userId,
+                            characterId =
+                                InitialCharacterData
+                                    .RHEA_ID,
+                            lastSeenAt =
+                                existingPresence
+                                    .statusUpdatedAt,
+                            nextAvailableAt = null
+                        )
+                }
             }
 
             thread.id
         }
+    }
+
+    suspend fun markCharacterOnline(
+        userId: String = LOCAL_USER_ID,
+        characterId: String =
+            InitialCharacterData.RHEA_ID,
+        activityContext: String? =
+            "ACTIVE_CHAT"
+    ) {
+        val currentTime =
+            System.currentTimeMillis()
+
+        characterPresenceDao.updatePresence(
+            userId = userId,
+            characterId = characterId,
+            status =
+                PRESENCE_STATUS_ONLINE,
+            activityContext =
+                activityContext,
+            lastSeenAt = null,
+            nextAvailableAt = null,
+            updatedAt = currentTime
+        )
+    }
+
+    suspend fun markCharacterTyping(
+        userId: String = LOCAL_USER_ID,
+        characterId: String =
+            InitialCharacterData.RHEA_ID
+    ) {
+        val currentTime =
+            System.currentTimeMillis()
+
+        characterPresenceDao.updatePresence(
+            userId = userId,
+            characterId = characterId,
+            status =
+                PRESENCE_STATUS_TYPING,
+            activityContext =
+                "REPLYING",
+            lastSeenAt = null,
+            nextAvailableAt = null,
+            updatedAt = currentTime
+        )
+    }
+
+    suspend fun markCharacterOffline(
+        userId: String = LOCAL_USER_ID,
+        characterId: String =
+            InitialCharacterData.RHEA_ID,
+        nextAvailableAt: Long? = null
+    ) {
+        val currentTime =
+            System.currentTimeMillis()
+
+        characterPresenceDao.markOffline(
+            userId = userId,
+            characterId = characterId,
+            lastSeenAt = currentTime,
+            nextAvailableAt =
+                nextAvailableAt
+        )
     }
 
     suspend fun sendUserTextMessage(
@@ -152,7 +299,8 @@ class ChatRepository(
         characterId: String =
             InitialCharacterData.RHEA_ID
     ): String {
-        val text = rawText.trim()
+        val text =
+            rawText.trim()
 
         require(text.isNotEmpty()) {
             "Message cannot be empty."
@@ -172,27 +320,144 @@ class ChatRepository(
                     senderType = "USER",
                     contentType = "TEXT",
                     bodyText = text,
-                    deliveryStatus = "PENDING",
-                    syncStatus = "LOCAL_ONLY",
-                    createdAt = currentTime
+                    deliveryStatus =
+                        "PENDING",
+                    syncStatus =
+                        "LOCAL_ONLY",
+                    createdAt =
+                        currentTime
                 )
             )
 
-            chatThreadDao.updateLastMessage(
-                threadId = threadId,
-                preview = text,
-                messageTime = currentTime,
-                updatedAt = currentTime
-            )
+            chatThreadDao
+                .updateLastMessage(
+                    threadId = threadId,
+                    preview = text,
+                    messageTime =
+                        currentTime,
+                    updatedAt =
+                        currentTime
+                )
 
-            relationshipStateDao.recordUserMessage(
-                userId = userId,
-                characterId = characterId,
-                interactionAt = currentTime
-            )
+            relationshipStateDao
+                .recordUserMessage(
+                    userId = userId,
+                    characterId =
+                        characterId,
+                    interactionAt =
+                        currentTime
+                )
         }
 
         return messageId
+    }
+
+    suspend fun prepareOutgoingMessageRetry(
+        messageId: String
+    ): String {
+        return database.withTransaction {
+            val message =
+                requireNotNull(
+                    messageDao.getMessage(
+                        messageId =
+                            messageId
+                    )
+                ) {
+                    "The failed message could not be found."
+                }
+
+            require(
+                message.senderType.equals(
+                    other = "USER",
+                    ignoreCase = true
+                )
+            ) {
+                "Only user messages can be retried."
+            }
+
+            require(
+                message.contentType.equals(
+                    other = "TEXT",
+                    ignoreCase = true
+                )
+            ) {
+                "Only text messages can currently be retried."
+            }
+
+            require(
+                message.deliveryStatus.equals(
+                    other = "FAILED",
+                    ignoreCase = true
+                )
+            ) {
+                "Only failed messages can be retried."
+            }
+
+            require(
+                message.deletedAt == null
+            ) {
+                "A deleted message cannot be retried."
+            }
+
+            val messageText =
+                message.bodyText
+                    ?.trim()
+                    ?.takeIf {
+                        it.isNotEmpty()
+                    }
+                    ?: throw
+                    IllegalStateException(
+                        "The failed message is empty."
+                    )
+
+            messageDao.markMessagePending(
+                messageId = messageId
+            )
+
+            messageText
+        }
+    }
+
+    suspend fun markOutgoingMessageSent(
+        messageId: String
+    ) {
+        val currentTime =
+            System.currentTimeMillis()
+
+        messageDao.markMessageSent(
+            messageId = messageId,
+            serverId = messageId,
+            sentAt = currentTime
+        )
+    }
+
+    suspend fun markOutgoingMessageDelivered(
+        messageId: String
+    ) {
+        messageDao.markMessageDelivered(
+            messageId = messageId,
+            deliveredAt =
+                System.currentTimeMillis()
+        )
+    }
+
+    suspend fun markUserMessagesReadByCharacter(
+        threadId: String
+    ) {
+        messageDao
+            .markUserMessagesReadByCharacter(
+                threadId = threadId,
+                readAt =
+                    System.currentTimeMillis()
+            )
+    }
+
+    suspend fun markOutgoingMessageFailed(
+        messageId: String
+    ) {
+        messageDao.markMessageFailed(
+            messageId = messageId
+        )
     }
 
     suspend fun saveCharacterTextMessage(
@@ -202,7 +467,8 @@ class ChatRepository(
         characterId: String =
             InitialCharacterData.RHEA_ID
     ): String {
-        val text = rawText.trim()
+        val text =
+            rawText.trim()
 
         require(text.isNotEmpty()) {
             "Message cannot be empty."
@@ -219,34 +485,46 @@ class ChatRepository(
                 MessageEntity(
                     id = messageId,
                     threadId = threadId,
-                    senderType = "CHARACTER",
+                    senderType =
+                        "CHARACTER",
                     contentType = "TEXT",
                     bodyText = text,
-                    deliveryStatus = "DELIVERED",
-                    syncStatus = "SYNCED",
-                    createdAt = currentTime,
+                    deliveryStatus =
+                        "DELIVERED",
+                    syncStatus =
+                        "SYNCED",
+                    createdAt =
+                        currentTime,
                     sentAt = currentTime,
-                    deliveredAt = currentTime
+                    deliveredAt =
+                        currentTime
                 )
             )
 
-            chatThreadDao.updateLastMessage(
-                threadId = threadId,
-                preview = text,
-                messageTime = currentTime,
-                updatedAt = currentTime
-            )
+            chatThreadDao
+                .updateLastMessage(
+                    threadId = threadId,
+                    preview = text,
+                    messageTime =
+                        currentTime,
+                    updatedAt =
+                        currentTime
+                )
 
-            chatThreadDao.incrementUnreadCount(
-                threadId = threadId,
-                updatedAt = currentTime
-            )
+            chatThreadDao
+                .incrementUnreadCount(
+                    threadId = threadId,
+                    updatedAt =
+                        currentTime
+                )
 
             relationshipStateDao
                 .recordCharacterMessage(
                     userId = userId,
-                    characterId = characterId,
-                    interactionAt = currentTime
+                    characterId =
+                        characterId,
+                    interactionAt =
+                        currentTime
                 )
         }
 
@@ -266,10 +544,12 @@ class ChatRepository(
                     readAt = currentTime
                 )
 
-            chatThreadDao.clearUnreadCount(
-                threadId = threadId,
-                updatedAt = currentTime
-            )
+            chatThreadDao
+                .clearUnreadCount(
+                    threadId = threadId,
+                    updatedAt =
+                        currentTime
+                )
         }
     }
 }

@@ -77,18 +77,24 @@ fun ChatScreen(
     onCameraClick: () -> Unit,
     onMicrophoneClick: () -> Unit,
     onSendMessage: (String) -> Unit,
+    onRetryMessage: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     lastSeenText: String = "recently"
 ) {
-    var messageText by rememberSaveable(character.id) {
+    var messageText by
+    rememberSaveable(character.id) {
         mutableStateOf("")
     }
 
-    val listState = rememberLazyListState()
-    val focusManager = LocalFocusManager.current
+    val listState =
+        rememberLazyListState()
+
+    val focusManager =
+        LocalFocusManager.current
 
     fun sendCurrentMessage() {
-        val cleanMessage = messageText.trim()
+        val cleanMessage =
+            messageText.trim()
 
         if (cleanMessage.isNotEmpty()) {
             onSendMessage(cleanMessage)
@@ -99,7 +105,9 @@ fun ChatScreen(
 
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
-            listState.scrollToItem(messages.lastIndex)
+            listState.scrollToItem(
+                messages.lastIndex
+            )
         }
     }
 
@@ -114,12 +122,16 @@ fun ChatScreen(
             lastSeenText = lastSeenText,
             onBackClick = onBackClick,
             onProfileClick = onProfileClick,
-            onVoiceCallClick = onVoiceCallClick,
+            onVoiceCallClick =
+                onVoiceCallClick,
             onMoreClick = onMoreClick
         )
 
         HorizontalDivider(
-            color = EnamoraOutline.copy(alpha = 0.45f)
+            color =
+                EnamoraOutline.copy(
+                    alpha = 0.45f
+                )
         )
 
         LazyColumn(
@@ -131,7 +143,8 @@ fun ChatScreen(
                 horizontal = 14.dp,
                 vertical = 16.dp
             ),
-            verticalArrangement = Arrangement.spacedBy(9.dp)
+            verticalArrangement =
+                Arrangement.spacedBy(9.dp)
         ) {
             items(
                 items = messages,
@@ -140,26 +153,34 @@ fun ChatScreen(
                 }
             ) { message ->
                 ChatMessageBubble(
-                    message = message
+                    message = message,
+                    onRetryMessage =
+                        onRetryMessage
                 )
             }
         }
 
         HorizontalDivider(
-            color = EnamoraOutline.copy(alpha = 0.45f)
+            color =
+                EnamoraOutline.copy(
+                    alpha = 0.45f
+                )
         )
 
         MessageComposer(
             messageText = messageText,
             characterName = character.name,
-            onMessageTextChange = { newText ->
+            onMessageTextChange = {
+                    newText ->
                 if (newText.length <= 500) {
                     messageText = newText
                 }
             },
-            onAttachmentClick = onAttachmentClick,
+            onAttachmentClick =
+                onAttachmentClick,
             onCameraClick = onCameraClick,
-            onMicrophoneClick = onMicrophoneClick,
+            onMicrophoneClick =
+                onMicrophoneClick,
             onSendClick = {
                 sendCurrentMessage()
             },
@@ -190,7 +211,8 @@ private fun ChatHeader(
                 top = 7.dp,
                 bottom = 7.dp
             ),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
         HeaderActionButton(
             symbol = "‹",
@@ -202,66 +224,94 @@ private fun ChatHeader(
         Row(
             modifier = Modifier
                 .weight(1f)
-                .clip(RoundedCornerShape(14.dp))
-                .clickable(onClick = onProfileClick)
+                .clip(
+                    RoundedCornerShape(
+                        14.dp
+                    )
+                )
+                .clickable(
+                    onClick =
+                        onProfileClick
+                )
                 .padding(vertical = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
             Image(
                 painter = painterResource(
-                    id = character.portraitResId
+                    id =
+                        character
+                            .portraitResId
                 ),
                 contentDescription =
                     "${character.name}'s profile photograph",
-                contentScale = ContentScale.Crop,
+                contentScale =
+                    ContentScale.Crop,
                 modifier = Modifier
                     .size(46.dp)
                     .clip(CircleShape)
                     .border(
                         width = 1.dp,
-                        color = EnamoraOutline,
-                        shape = CircleShape
+                        color =
+                            EnamoraOutline,
+                        shape =
+                            CircleShape
                     )
             )
 
             Spacer(
-                modifier = Modifier.width(11.dp)
+                modifier =
+                    Modifier.width(11.dp)
             )
 
             Column(
-                modifier = Modifier.weight(1f)
+                modifier =
+                    Modifier.weight(1f)
             ) {
                 Text(
                     text = character.name,
-                    color = EnamoraWarmIvory,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
+                    color =
+                        EnamoraWarmIvory,
+                    style =
+                        MaterialTheme
+                            .typography
+                            .titleMedium,
+                    fontWeight =
+                        FontWeight.SemiBold,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow =
+                        TextOverflow.Ellipsis
                 )
 
                 Spacer(
-                    modifier = Modifier.height(3.dp)
+                    modifier =
+                        Modifier.height(3.dp)
                 )
 
                 CharacterPresenceStatus(
-                    isOnline = character.isAvailable,
+                    isOnline =
+                        character
+                            .isAvailable,
                     isTyping = isTyping,
-                    lastSeenText = lastSeenText
+                    lastSeenText =
+                        lastSeenText
                 )
             }
         }
 
         HeaderActionButton(
             symbol = "☎",
-            description = "Start voice call",
-            onClick = onVoiceCallClick,
+            description =
+                "Start voice call",
+            onClick =
+                onVoiceCallClick,
             fontSize = 23.sp
         )
 
         HeaderActionButton(
             symbol = "⋮",
-            description = "More options",
+            description =
+                "More options",
             onClick = onMoreClick,
             fontSize = 28.sp
         )
@@ -274,49 +324,69 @@ private fun CharacterPresenceStatus(
     isTyping: Boolean,
     lastSeenText: String
 ) {
-    val onlineColor = Color(0xFF68CA8B)
+    val onlineColor =
+        Color(0xFF68CA8B)
 
     when {
         isTyping -> {
             Text(
                 text = "typing…",
-                color = EnamoraDustyRose,
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Medium
+                color =
+                    EnamoraDustyRose,
+                style =
+                    MaterialTheme
+                        .typography
+                        .labelMedium,
+                fontWeight =
+                    FontWeight.Medium
             )
         }
 
         isOnline -> {
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
                 Box(
                     modifier = Modifier
                         .size(7.dp)
                         .clip(CircleShape)
-                        .background(onlineColor)
+                        .background(
+                            onlineColor
+                        )
                 )
 
                 Spacer(
-                    modifier = Modifier.width(6.dp)
+                    modifier =
+                        Modifier.width(6.dp)
                 )
 
                 Text(
                     text = "online",
                     color = onlineColor,
-                    style = MaterialTheme.typography.labelMedium,
-                    fontWeight = FontWeight.Medium
+                    style =
+                        MaterialTheme
+                            .typography
+                            .labelMedium,
+                    fontWeight =
+                        FontWeight.Medium
                 )
             }
         }
 
         else -> {
             Text(
-                text = "last seen $lastSeenText",
-                color = EnamoraTextSecondary,
-                style = MaterialTheme.typography.labelMedium,
+                text =
+                    "last seen $lastSeenText",
+                color =
+                    EnamoraTextSecondary,
+                style =
+                    MaterialTheme
+                        .typography
+                        .labelMedium,
                 maxLines = 1,
-                overflow = TextOverflow.Ellipsis
+                overflow =
+                    TextOverflow.Ellipsis
             )
         }
     }
@@ -327,31 +397,36 @@ private fun HeaderActionButton(
     symbol: String,
     description: String,
     onClick: () -> Unit,
-    fontSize: androidx.compose.ui.unit.TextUnit
+    fontSize:
+    androidx.compose.ui.unit.TextUnit
 ) {
     IconButton(
         onClick = onClick,
         modifier = Modifier
             .size(46.dp)
             .semantics {
-                contentDescription = description
+                contentDescription =
+                    description
             }
     ) {
         Text(
             text = symbol,
             color = EnamoraWarmIvory,
             fontSize = fontSize,
-            fontWeight = FontWeight.Light
+            fontWeight =
+                FontWeight.Light
         )
     }
 }
 
 @Composable
 private fun ChatMessageBubble(
-    message: ChatMessageUiModel
+    message: ChatMessageUiModel,
+    onRetryMessage: (String) -> Unit
 ) {
     val isUserMessage =
-        message.author == MessageAuthor.USER
+        message.author ==
+                MessageAuthor.USER
 
     val bubbleShape =
         if (isUserMessage) {
@@ -378,7 +453,8 @@ private fun ChatMessageBubble(
         }
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier =
+            Modifier.fillMaxWidth(),
         horizontalArrangement =
             if (isUserMessage) {
                 Arrangement.End
@@ -390,45 +466,66 @@ private fun ChatMessageBubble(
             modifier = Modifier
                 .fillMaxWidth(0.84f)
                 .clip(bubbleShape)
-                .background(backgroundColor)
+                .background(
+                    backgroundColor
+                )
                 .border(
                     width = 1.dp,
-                    color = EnamoraOutline.copy(alpha = 0.55f),
+                    color =
+                        EnamoraOutline.copy(
+                            alpha = 0.55f
+                        ),
                     shape = bubbleShape
                 )
                 .padding(11.dp)
         ) {
-            when (val content = message.content) {
+            when (
+                val content =
+                    message.content
+            ) {
                 is ChatMessageContent.Text -> {
                     Text(
                         text = content.text,
-                        color = EnamoraWarmIvory,
-                        style = MaterialTheme.typography.bodyMedium,
+                        color =
+                            EnamoraWarmIvory,
+                        style =
+                            MaterialTheme
+                                .typography
+                                .bodyMedium,
                         lineHeight = 21.sp
                     )
                 }
 
                 is ChatMessageContent.VoiceNote -> {
                     VoiceNoteContent(
-                        duration = content.duration
+                        duration =
+                            content.duration
                     )
                 }
 
                 is ChatMessageContent.Photo -> {
                     PhotoMessageContent(
-                        imageResId = content.imageResId,
-                        caption = content.caption
+                        imageResId =
+                            content.imageResId,
+                        caption =
+                            content.caption
                     )
                 }
             }
 
             Spacer(
-                modifier = Modifier.height(5.dp)
+                modifier =
+                    Modifier.height(5.dp)
             )
 
             MessageMetadata(
-                timestamp = message.timestamp,
-                deliveryState = message.deliveryState
+                messageId = message.id,
+                timestamp =
+                    message.timestamp,
+                deliveryState =
+                    message.deliveryState,
+                onRetryMessage =
+                    onRetryMessage
             )
         }
     }
@@ -438,73 +535,98 @@ private fun ChatMessageBubble(
 private fun VoiceNoteContent(
     duration: String
 ) {
-    val waveformHeights = listOf(
-        10,
-        17,
-        25,
-        14,
-        30,
-        20,
-        11,
-        27,
-        35,
-        18,
-        29,
-        13,
-        23,
-        32,
-        16,
-        26,
-        12,
-        21
-    )
+    val waveformHeights =
+        listOf(
+            10,
+            17,
+            25,
+            14,
+            30,
+            20,
+            11,
+            27,
+            35,
+            18,
+            29,
+            13,
+            23,
+            32,
+            16,
+            26,
+            12,
+            21
+        )
 
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier.fillMaxWidth(),
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .size(42.dp)
                 .clip(CircleShape)
-                .background(EnamoraRose),
-            contentAlignment = Alignment.Center
+                .background(
+                    EnamoraRose
+                ),
+            contentAlignment =
+                Alignment.Center
         ) {
             Text(
                 text = "▶",
-                color = EnamoraObsidian,
+                color =
+                    EnamoraObsidian,
                 fontSize = 17.sp
             )
         }
 
         Spacer(
-            modifier = Modifier.width(11.dp)
+            modifier =
+                Modifier.width(11.dp)
         )
 
         Row(
-            modifier = Modifier.weight(1f),
-            horizontalArrangement = Arrangement.spacedBy(2.dp),
-            verticalAlignment = Alignment.CenterVertically
+            modifier =
+                Modifier.weight(1f),
+            horizontalArrangement =
+                Arrangement.spacedBy(
+                    2.dp
+                ),
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
-            waveformHeights.forEach { height ->
+            waveformHeights.forEach {
+                    height ->
                 Box(
                     modifier = Modifier
                         .width(2.dp)
-                        .height(height.dp)
-                        .clip(CircleShape)
-                        .background(EnamoraTextSecondary)
+                        .height(
+                            height.dp
+                        )
+                        .clip(
+                            CircleShape
+                        )
+                        .background(
+                            EnamoraTextSecondary
+                        )
                 )
             }
         }
 
         Spacer(
-            modifier = Modifier.width(8.dp)
+            modifier =
+                Modifier.width(8.dp)
         )
 
         Text(
             text = duration,
-            color = EnamoraWarmIvory,
-            style = MaterialTheme.typography.labelMedium
+            color =
+                EnamoraWarmIvory,
+            style =
+                MaterialTheme
+                    .typography
+                    .labelMedium
         )
     }
 }
@@ -518,23 +640,34 @@ private fun PhotoMessageContent(
         painter = painterResource(
             id = imageResId
         ),
-        contentDescription = "Photo shared in the conversation",
-        contentScale = ContentScale.Crop,
+        contentDescription =
+            "Photo shared in the conversation",
+        contentScale =
+            ContentScale.Crop,
         modifier = Modifier
             .fillMaxWidth()
             .height(190.dp)
-            .clip(RoundedCornerShape(13.dp))
+            .clip(
+                RoundedCornerShape(
+                    13.dp
+                )
+            )
     )
 
     if (caption.isNotBlank()) {
         Spacer(
-            modifier = Modifier.height(8.dp)
+            modifier =
+                Modifier.height(8.dp)
         )
 
         Text(
             text = caption,
-            color = EnamoraWarmIvory,
-            style = MaterialTheme.typography.bodyMedium,
+            color =
+                EnamoraWarmIvory,
+            style =
+                MaterialTheme
+                    .typography
+                    .bodyMedium,
             lineHeight = 20.sp
         )
     }
@@ -542,50 +675,159 @@ private fun PhotoMessageContent(
 
 @Composable
 private fun MessageMetadata(
+    messageId: String,
     timestamp: String,
-    deliveryState: MessageDeliveryState?
+    deliveryState:
+    MessageDeliveryState?,
+    onRetryMessage: (String) -> Unit
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.End,
-        verticalAlignment = Alignment.CenterVertically
+        modifier =
+            Modifier.fillMaxWidth(),
+        horizontalArrangement =
+            Arrangement.End,
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
         Text(
             text = timestamp,
-            color = EnamoraTextSecondary,
-            style = MaterialTheme.typography.labelSmall
+            color =
+                EnamoraTextSecondary,
+            style =
+                MaterialTheme
+                    .typography
+                    .labelSmall
         )
 
         if (deliveryState != null) {
             Spacer(
-                modifier = Modifier.width(5.dp)
+                modifier =
+                    Modifier.width(5.dp)
             )
 
-            Text(
-                text = deliveryStateSymbol(
-                    deliveryState = deliveryState
-                ),
-                color =
-                    if (deliveryState == MessageDeliveryState.READ) {
-                        EnamoraRoseSoft
-                    } else {
-                        EnamoraTextSecondary
-                    },
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold
-            )
+            if (
+                deliveryState ==
+                MessageDeliveryState.FAILED
+            ) {
+                Row(
+                    modifier = Modifier
+                        .clip(
+                            RoundedCornerShape(
+                                10.dp
+                            )
+                        )
+                        .clickable {
+                            onRetryMessage(
+                                messageId
+                            )
+                        }
+                        .semantics {
+                            contentDescription =
+                                "Retry failed message"
+                        }
+                        .padding(
+                            horizontal = 4.dp,
+                            vertical = 2.dp
+                        ),
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "!",
+                        color =
+                            Color(
+                                0xFFFF6B6B
+                            ),
+                        style =
+                            MaterialTheme
+                                .typography
+                                .labelMedium,
+                        fontWeight =
+                            FontWeight.Bold
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(
+                                4.dp
+                            )
+                    )
+
+                    Text(
+                        text = "Tap to retry",
+                        color =
+                            Color(
+                                0xFFFF6B6B
+                            ),
+                        style =
+                            MaterialTheme
+                                .typography
+                                .labelSmall,
+                        fontWeight =
+                            FontWeight.SemiBold
+                    )
+                }
+            } else {
+                Text(
+                    text =
+                        deliveryStateSymbol(
+                            deliveryState =
+                                deliveryState
+                        ),
+                    color =
+                        deliveryStateColor(
+                            deliveryState =
+                                deliveryState
+                        ),
+                    style =
+                        MaterialTheme
+                            .typography
+                            .labelMedium,
+                    fontWeight =
+                        FontWeight.Bold
+                )
+            }
         }
     }
 }
 
 private fun deliveryStateSymbol(
-    deliveryState: MessageDeliveryState
+    deliveryState:
+    MessageDeliveryState
 ): String {
     return when (deliveryState) {
-        MessageDeliveryState.SENDING -> "◷"
-        MessageDeliveryState.SENT -> "✓"
-        MessageDeliveryState.DELIVERED -> "✓✓"
-        MessageDeliveryState.READ -> "✓✓"
+        MessageDeliveryState.SENDING ->
+            "◷"
+
+        MessageDeliveryState.SENT ->
+            "✓"
+
+        MessageDeliveryState.DELIVERED ->
+            "✓✓"
+
+        MessageDeliveryState.READ ->
+            "✓✓"
+
+        MessageDeliveryState.FAILED ->
+            "!"
+    }
+}
+
+private fun deliveryStateColor(
+    deliveryState:
+    MessageDeliveryState
+): Color {
+    return when (deliveryState) {
+        MessageDeliveryState.READ ->
+            EnamoraRoseSoft
+
+        MessageDeliveryState.FAILED ->
+            Color(0xFFFF6B6B)
+
+        MessageDeliveryState.SENDING,
+        MessageDeliveryState.SENT,
+        MessageDeliveryState.DELIVERED ->
+            EnamoraTextSecondary
     }
 }
 
@@ -593,7 +835,8 @@ private fun deliveryStateSymbol(
 private fun MessageComposer(
     messageText: String,
     characterName: String,
-    onMessageTextChange: (String) -> Unit,
+    onMessageTextChange:
+        (String) -> Unit,
     onAttachmentClick: () -> Unit,
     onCameraClick: () -> Unit,
     onMicrophoneClick: () -> Unit,
@@ -603,72 +846,121 @@ private fun MessageComposer(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .background(EnamoraObsidian)
+            .background(
+                EnamoraObsidian
+            )
             .padding(
                 horizontal = 9.dp,
                 vertical = 9.dp
             ),
-        verticalAlignment = Alignment.CenterVertically
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
         ComposerCircleButton(
             symbol = "+",
-            description = "Add attachment",
-            backgroundColor = EnamoraSurface,
-            contentColor = EnamoraWarmIvory,
-            onClick = onAttachmentClick
+            description =
+                "Add attachment",
+            backgroundColor =
+                EnamoraSurface,
+            contentColor =
+                EnamoraWarmIvory,
+            onClick =
+                onAttachmentClick
         )
 
         Spacer(
-            modifier = Modifier.width(7.dp)
+            modifier =
+                Modifier.width(7.dp)
         )
 
         Row(
             modifier = Modifier
                 .weight(1f)
                 .heightIn(min = 52.dp)
-                .clip(RoundedCornerShape(28.dp))
-                .background(EnamoraSurface)
+                .clip(
+                    RoundedCornerShape(
+                        28.dp
+                    )
+                )
+                .background(
+                    EnamoraSurface
+                )
                 .border(
                     width = 1.dp,
-                    color = EnamoraOutline.copy(alpha = 0.65f),
-                    shape = RoundedCornerShape(28.dp)
+                    color =
+                        EnamoraOutline.copy(
+                            alpha = 0.65f
+                        ),
+                    shape =
+                        RoundedCornerShape(
+                            28.dp
+                        )
                 )
-                .padding(start = 17.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .padding(
+                    start = 17.dp
+                ),
+            verticalAlignment =
+                Alignment.CenterVertically
         ) {
             BasicTextField(
                 value = messageText,
-                onValueChange = onMessageTextChange,
+                onValueChange =
+                    onMessageTextChange,
                 modifier = Modifier
                     .weight(1f)
-                    .padding(vertical = 13.dp),
-                textStyle = MaterialTheme.typography.bodyMedium.copy(
-                    color = EnamoraWarmIvory
-                ),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Send
-                ),
-                keyboardActions = KeyboardActions(
-                    onSend = {
-                        onKeyboardSend()
-                    }
-                ),
-                cursorBrush =
-                    androidx.compose.ui.graphics.SolidColor(
-                        EnamoraRose
+                    .padding(
+                        vertical = 13.dp
                     ),
-                decorationBox = { innerTextField ->
+                textStyle =
+                    MaterialTheme
+                        .typography
+                        .bodyMedium
+                        .copy(
+                            color =
+                                EnamoraWarmIvory
+                        ),
+                singleLine = true,
+                keyboardOptions =
+                    KeyboardOptions(
+                        imeAction =
+                            ImeAction.Send
+                    ),
+                keyboardActions =
+                    KeyboardActions(
+                        onSend = {
+                            onKeyboardSend()
+                        }
+                    ),
+                cursorBrush =
+                    androidx.compose.ui
+                        .graphics
+                        .SolidColor(
+                            EnamoraRose
+                        ),
+                decorationBox = {
+                        innerTextField ->
                     Box(
-                        contentAlignment = Alignment.CenterStart
+                        contentAlignment =
+                            Alignment
+                                .CenterStart
                     ) {
-                        if (messageText.isBlank()) {
+                        if (
+                            messageText
+                                .isBlank()
+                        ) {
                             Text(
-                                text = "Message $characterName...",
-                                color = EnamoraTextSecondary,
-                                style = MaterialTheme.typography.bodyMedium,
+                                text =
+                                    "Message $characterName...",
+                                color =
+                                    EnamoraTextSecondary,
+                                style =
+                                    MaterialTheme
+                                        .typography
+                                        .bodyMedium,
                                 maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
+                                overflow =
+                                    TextOverflow
+                                        .Ellipsis
                             )
                         }
 
@@ -678,39 +970,50 @@ private fun MessageComposer(
             )
 
             IconButton(
-                onClick = onCameraClick,
+                onClick =
+                    onCameraClick,
                 modifier = Modifier
                     .size(48.dp)
                     .semantics {
-                        contentDescription = "Open camera"
+                        contentDescription =
+                            "Open camera"
                     }
             ) {
                 Text(
                     text = "▣",
-                    color = EnamoraWarmIvory,
+                    color =
+                        EnamoraWarmIvory,
                     fontSize = 21.sp
                 )
             }
         }
 
         Spacer(
-            modifier = Modifier.width(7.dp)
+            modifier =
+                Modifier.width(7.dp)
         )
 
         if (messageText.isBlank()) {
             ComposerCircleButton(
                 symbol = "●",
-                description = "Record voice note",
-                backgroundColor = EnamoraRose,
-                contentColor = Color.White,
-                onClick = onMicrophoneClick
+                description =
+                    "Record voice note",
+                backgroundColor =
+                    EnamoraRose,
+                contentColor =
+                    Color.White,
+                onClick =
+                    onMicrophoneClick
             )
         } else {
             ComposerCircleButton(
                 symbol = "↑",
-                description = "Send message",
-                backgroundColor = EnamoraRose,
-                contentColor = EnamoraObsidian,
+                description =
+                    "Send message",
+                backgroundColor =
+                    EnamoraRose,
+                contentColor =
+                    EnamoraObsidian,
                 onClick = onSendClick
             )
         }
@@ -729,23 +1032,33 @@ private fun ComposerCircleButton(
         modifier = Modifier
             .size(50.dp)
             .clip(CircleShape)
-            .background(backgroundColor)
+            .background(
+                backgroundColor
+            )
             .border(
                 width = 1.dp,
-                color = EnamoraOutline.copy(alpha = 0.65f),
+                color =
+                    EnamoraOutline.copy(
+                        alpha = 0.65f
+                    ),
                 shape = CircleShape
             )
-            .clickable(onClick = onClick)
+            .clickable(
+                onClick = onClick
+            )
             .semantics {
-                contentDescription = description
+                contentDescription =
+                    description
             },
-        contentAlignment = Alignment.Center
+        contentAlignment =
+            Alignment.Center
     ) {
         Text(
             text = symbol,
             color = contentColor,
             fontSize = 25.sp,
-            fontWeight = FontWeight.Medium
+            fontWeight =
+                FontWeight.Medium
         )
     }
 }
